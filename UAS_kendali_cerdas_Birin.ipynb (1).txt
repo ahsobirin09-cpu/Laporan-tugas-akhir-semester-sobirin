@@ -1,0 +1,544 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##UPLOAD API KAGGLE\n"
+      ],
+      "metadata": {
+        "id": "JjdZKsUcTWoZ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Install library kaggle jika belum adanya\n",
+        "!pip install -q kaggle\n",
+        "\n",
+        "# Upload file kaggle.json yang sudah diunduh tadi\n",
+        "from google.colab import files\n",
+        "files.upload()\n",
+        "\n",
+        "# Membuat direktori kaggle dan mengatur izin akses\n",
+        "!mkdir -p ~/.kaggle\n",
+        "!cp kaggle.json ~/.kaggle/\n",
+        "!chmod 600 ~/.kaggle/kaggle.json\n",
+        "\n",
+        "# Cek apakah koneksi berhasil (akan menampilkan daftar dataset populer)\n",
+        "!kaggle datasets list"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 492
+        },
+        "id": "PI7DM2zzTbXE",
+        "outputId": "bd925c4f-b3e8-4d6b-8aa8-84d9765ab24a"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ],
+            "text/html": [
+              "\n",
+              "     <input type=\"file\" id=\"files-f9d35851-7a3b-4450-b3ea-e7020e11f549\" name=\"files[]\" multiple disabled\n",
+              "        style=\"border:none\" />\n",
+              "     <output id=\"result-f9d35851-7a3b-4450-b3ea-e7020e11f549\">\n",
+              "      Upload widget is only available when the cell has been executed in the\n",
+              "      current browser session. Please rerun this cell to enable.\n",
+              "      </output>\n",
+              "      <script>// Copyright 2017 Google LLC\n",
+              "//\n",
+              "// Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+              "// you may not use this file except in compliance with the License.\n",
+              "// You may obtain a copy of the License at\n",
+              "//\n",
+              "//      http://www.apache.org/licenses/LICENSE-2.0\n",
+              "//\n",
+              "// Unless required by applicable law or agreed to in writing, software\n",
+              "// distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+              "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+              "// See the License for the specific language governing permissions and\n",
+              "// limitations under the License.\n",
+              "\n",
+              "/**\n",
+              " * @fileoverview Helpers for google.colab Python module.\n",
+              " */\n",
+              "(function(scope) {\n",
+              "function span(text, styleAttributes = {}) {\n",
+              "  const element = document.createElement('span');\n",
+              "  element.textContent = text;\n",
+              "  for (const key of Object.keys(styleAttributes)) {\n",
+              "    element.style[key] = styleAttributes[key];\n",
+              "  }\n",
+              "  return element;\n",
+              "}\n",
+              "\n",
+              "// Max number of bytes which will be uploaded at a time.\n",
+              "const MAX_PAYLOAD_SIZE = 100 * 1024;\n",
+              "\n",
+              "function _uploadFiles(inputId, outputId) {\n",
+              "  const steps = uploadFilesStep(inputId, outputId);\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  // Cache steps on the outputElement to make it available for the next call\n",
+              "  // to uploadFilesContinue from Python.\n",
+              "  outputElement.steps = steps;\n",
+              "\n",
+              "  return _uploadFilesContinue(outputId);\n",
+              "}\n",
+              "\n",
+              "// This is roughly an async generator (not supported in the browser yet),\n",
+              "// where there are multiple asynchronous steps and the Python side is going\n",
+              "// to poll for completion of each step.\n",
+              "// This uses a Promise to block the python side on completion of each step,\n",
+              "// then passes the result of the previous step as the input to the next step.\n",
+              "function _uploadFilesContinue(outputId) {\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  const steps = outputElement.steps;\n",
+              "\n",
+              "  const next = steps.next(outputElement.lastPromiseValue);\n",
+              "  return Promise.resolve(next.value.promise).then((value) => {\n",
+              "    // Cache the last promise value to make it available to the next\n",
+              "    // step of the generator.\n",
+              "    outputElement.lastPromiseValue = value;\n",
+              "    return next.value.response;\n",
+              "  });\n",
+              "}\n",
+              "\n",
+              "/**\n",
+              " * Generator function which is called between each async step of the upload\n",
+              " * process.\n",
+              " * @param {string} inputId Element ID of the input file picker element.\n",
+              " * @param {string} outputId Element ID of the output display.\n",
+              " * @return {!Iterable<!Object>} Iterable of next steps.\n",
+              " */\n",
+              "function* uploadFilesStep(inputId, outputId) {\n",
+              "  const inputElement = document.getElementById(inputId);\n",
+              "  inputElement.disabled = false;\n",
+              "\n",
+              "  const outputElement = document.getElementById(outputId);\n",
+              "  outputElement.innerHTML = '';\n",
+              "\n",
+              "  const pickedPromise = new Promise((resolve) => {\n",
+              "    inputElement.addEventListener('change', (e) => {\n",
+              "      resolve(e.target.files);\n",
+              "    });\n",
+              "  });\n",
+              "\n",
+              "  const cancel = document.createElement('button');\n",
+              "  inputElement.parentElement.appendChild(cancel);\n",
+              "  cancel.textContent = 'Cancel upload';\n",
+              "  const cancelPromise = new Promise((resolve) => {\n",
+              "    cancel.onclick = () => {\n",
+              "      resolve(null);\n",
+              "    };\n",
+              "  });\n",
+              "\n",
+              "  // Wait for the user to pick the files.\n",
+              "  const files = yield {\n",
+              "    promise: Promise.race([pickedPromise, cancelPromise]),\n",
+              "    response: {\n",
+              "      action: 'starting',\n",
+              "    }\n",
+              "  };\n",
+              "\n",
+              "  cancel.remove();\n",
+              "\n",
+              "  // Disable the input element since further picks are not allowed.\n",
+              "  inputElement.disabled = true;\n",
+              "\n",
+              "  if (!files) {\n",
+              "    return {\n",
+              "      response: {\n",
+              "        action: 'complete',\n",
+              "      }\n",
+              "    };\n",
+              "  }\n",
+              "\n",
+              "  for (const file of files) {\n",
+              "    const li = document.createElement('li');\n",
+              "    li.append(span(file.name, {fontWeight: 'bold'}));\n",
+              "    li.append(span(\n",
+              "        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +\n",
+              "        `last modified: ${\n",
+              "            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :\n",
+              "                                    'n/a'} - `));\n",
+              "    const percent = span('0% done');\n",
+              "    li.appendChild(percent);\n",
+              "\n",
+              "    outputElement.appendChild(li);\n",
+              "\n",
+              "    const fileDataPromise = new Promise((resolve) => {\n",
+              "      const reader = new FileReader();\n",
+              "      reader.onload = (e) => {\n",
+              "        resolve(e.target.result);\n",
+              "      };\n",
+              "      reader.readAsArrayBuffer(file);\n",
+              "    });\n",
+              "    // Wait for the data to be ready.\n",
+              "    let fileData = yield {\n",
+              "      promise: fileDataPromise,\n",
+              "      response: {\n",
+              "        action: 'continue',\n",
+              "      }\n",
+              "    };\n",
+              "\n",
+              "    // Use a chunked sending to avoid message size limits. See b/62115660.\n",
+              "    let position = 0;\n",
+              "    do {\n",
+              "      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);\n",
+              "      const chunk = new Uint8Array(fileData, position, length);\n",
+              "      position += length;\n",
+              "\n",
+              "      const base64 = btoa(String.fromCharCode.apply(null, chunk));\n",
+              "      yield {\n",
+              "        response: {\n",
+              "          action: 'append',\n",
+              "          file: file.name,\n",
+              "          data: base64,\n",
+              "        },\n",
+              "      };\n",
+              "\n",
+              "      let percentDone = fileData.byteLength === 0 ?\n",
+              "          100 :\n",
+              "          Math.round((position / fileData.byteLength) * 100);\n",
+              "      percent.textContent = `${percentDone}% done`;\n",
+              "\n",
+              "    } while (position < fileData.byteLength);\n",
+              "  }\n",
+              "\n",
+              "  // All done.\n",
+              "  yield {\n",
+              "    response: {\n",
+              "      action: 'complete',\n",
+              "    }\n",
+              "  };\n",
+              "}\n",
+              "\n",
+              "scope.google = scope.google || {};\n",
+              "scope.google.colab = scope.google.colab || {};\n",
+              "scope.google.colab._files = {\n",
+              "  _uploadFiles,\n",
+              "  _uploadFilesContinue,\n",
+              "};\n",
+              "})(self);\n",
+              "</script> "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Saving kaggle.json to kaggle.json\n",
+            "ref                                                           title                                                     size  lastUpdated                 downloadCount  voteCount  usabilityRating  \n",
+            "------------------------------------------------------------  --------------------------------------------------  ----------  --------------------------  -------------  ---------  ---------------  \n",
+            "saidaminsaidaxmadov/chocolate-sales                           Chocolate Sales                                         468320  2026-01-04 14:23:35.490000           9089        149  1.0              \n",
+            "vishardmehta/delhi-pollution-aqi-dataset                      Delhi Pollution AQI dataset                            5299345  2026-01-26 14:14:04.553000            886         27  1.0              \n",
+            "ayeshaimran1619/customer-spending-patterns                    Customer Spending Patterns                               72157  2026-01-24 14:56:48.767000            748         25  1.0              \n",
+            "aliiihussain/sports-footwear-sales-and-consumer-behavior      Sports Footwear Sales & Consumer Behavior               753778  2026-01-26 14:27:09.117000            610         22  1.0              \n",
+            "zahranusratt/student-social-media-addiction-analysis-dataset  Student Social Media Addiction Analysis Dataset           7851  2026-01-22 04:02:08.347000           1157         37  1.0              \n",
+            "rockyt07/social-media-user-analysis                           Social Media User Analysis                           247842357  2026-01-14 02:28:41.970000           5888        130  1.0              \n",
+            "neurocipher/heartdisease                                      Heart Disease                                             3491  2025-12-11 15:29:14.327000          18322        407  1.0              \n",
+            "vishardmehta/indian-engineering-college-placement-dataset     Indian Engineering College Placement Dataset            137603  2026-01-24 15:23:40.150000           1234         39  1.0              \n",
+            "thedrzee/student-social-media-and-relationships               Student Social Media & Relationships                      7851  2026-01-20 19:00:03.917000           1645         66  0.9411765        \n",
+            "ayeshasiddiqa123/student-perfirmance                          Student Academic Performance Dataset.                    96178  2026-01-06 12:08:32.540000           2363         43  1.0              \n",
+            "zahranusratt/us-irs-individual-income-tax-records             Customer Demographics &  Shopping Preferences Data       72165  2026-01-27 04:44:36.453000            325         27  1.0              \n",
+            "datacodex/netflix-dataset                                     Netflix Titles Overview                                1400865  2026-01-11 05:03:07.077000            401         16  1.0              \n",
+            "nudratabbas/vitamin-deficiency-disease-prediction-dataset     Vitamin Deficiency Disease Prediction Dataset           169913  2026-01-23 07:02:35.970000            904         26  1.0              \n",
+            "neurocipher/student-performance                               Student Performance                                      49705  2025-12-12 12:06:28.973000          12029        206  1.0              \n",
+            "hassanjameelahmed/healthcare-analytics-patient-flow-data      healthcare_analytics_patient_flow_data                  234313  2026-01-22 12:32:26.693000            817         27  1.0              \n",
+            "algozee/bmw-dataset                                           BMW Used Car Market Analysis Dataset                    112601  2026-01-13 16:50:57.680000           1715         50  1.0              \n",
+            "vishardmehta/delhi-traffic-travel-time-prediction-dataset     Delhi Traffic Dataset                                    68798  2026-01-26 17:16:06.680000            324         25  1.0              \n",
+            "mohamedasak/metacritic-movies-dataset                         Metacritic Movies Dataset                              9257612  2026-01-24 15:13:42.403000            410         27  1.0              \n",
+            "shraddha4ever20/top-rated-movies-from-tmdb-19902025           Top Rated Movies from TMDb (1902–2026)                 2651890  2026-01-22 11:56:53.660000            806         29  1.0              \n",
+            "dhrubangtalukdar/qs-world-university-rankings-2026-top-1500   QS World University Rankings 2026 – Top 1500             79192  2026-01-23 11:11:49.313000            476         37  1.0              \n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##DOWNLOAD DATASET"
+      ],
+      "metadata": {
+        "id": "MzocTPvSUmG_"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Mengunduh dataset menggunakan API Command dari Kaggle\n",
+        "!kaggle datasets download -d arashnic/book-recommendation-dataset"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cjUl70klUp4b",
+        "outputId": "20494f62-0c37-45a7-95ec-2d52321bd967"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Dataset URL: https://www.kaggle.com/datasets/arashnic/book-recommendation-dataset\n",
+            "License(s): CC0-1.0\n",
+            "Downloading book-recommendation-dataset.zip to /content\n",
+            "  0% 0.00/24.3M [00:00<?, ?B/s]\n",
+            "100% 24.3M/24.3M [00:00<00:00, 1.27GB/s]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##EKSTRAK DATESET"
+      ],
+      "metadata": {
+        "id": "0LUnKZYCUtx6"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Mengekstrak file zip yang baru saja diunduh\n",
+        "!unzip book-recommendation-dataset.zip -d data_buku"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "SEjVyy4mUwOF",
+        "outputId": "c3dcc9b2-ffbc-4d12-9cbe-8f5f3cde05a1"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Archive:  book-recommendation-dataset.zip\n",
+            "  inflating: data_buku/Books.csv     \n",
+            "  inflating: data_buku/DeepRec.png   \n",
+            "  inflating: data_buku/Ratings.csv   \n",
+            "  inflating: data_buku/Users.csv     \n",
+            "  inflating: data_buku/classicRec.png  \n",
+            "  inflating: data_buku/recsys_taxonomy2.png  \n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##Data Understanding (Memahami Data)"
+      ],
+      "metadata": {
+        "id": "3L6bVLqYVtyG"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "\n",
+        "# Load data\n",
+        "books = pd.read_csv('data_buku/Books.csv', low_memory=False)\n",
+        "ratings = pd.read_csv('data_buku/Ratings.csv')\n",
+        "users = pd.read_csv('data_buku/Users.csv')\n",
+        "\n",
+        "# Cek jumlah data (Kriteria Wajib: Memberikan informasi jumlah data)\n",
+        "print(f\"Jumlah judul buku: {len(books)}\")\n",
+        "print(f\"Jumlah data rating: {len(ratings)}\")\n",
+        "print(f\"Jumlah user: {len(users)}\")\n",
+        "\n",
+        "# Cek missing values (Kriteria Wajib: Kondisi data)\n",
+        "print(\"\\nMissing values pada Books:\\n\", books.isnull().sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7C8O6xHIVvhJ",
+        "outputId": "7deb9faa-e83d-441d-b870-bdcb85a4d791"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Jumlah judul buku: 271360\n",
+            "Jumlah data rating: 1149780\n",
+            "Jumlah user: 278858\n",
+            "\n",
+            "Missing values pada Books:\n",
+            " ISBN                   0\n",
+            "Book-Title             0\n",
+            "Book-Author            2\n",
+            "Year-Of-Publication    0\n",
+            "Publisher              2\n",
+            "Image-URL-S            0\n",
+            "Image-URL-M            0\n",
+            "Image-URL-L            3\n",
+            "dtype: int64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##Data Preparation (Persiapan Data)"
+      ],
+      "metadata": {
+        "id": "Z5iCI32cWDeW"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Menggabungkan data Rating dengan Buku (Merging)\n",
+        "# Alasan: Agar kita tahu judul buku mana yang diberikan rating oleh user\n",
+        "book_info = pd.merge(ratings, books, on='ISBN')\n",
+        "\n",
+        "# 2. Menghapus kolom yang tidak diperlukan (Drop columns)\n",
+        "# Alasan: Mengurangi beban memori dan menghapus fitur yang tidak relevan bagi model\n",
+        "unused_cols = ['Image-URL-S', 'Image-URL-M', 'Image-URL-L', 'Year-Of-Publication', 'Publisher']\n",
+        "book_info = book_info.drop(unused_cols, axis=1)\n",
+        "\n",
+        "# 3. Membersihkan data duplikat\n",
+        "# Alasan: Memastikan satu user hanya memberikan satu rating untuk satu buku\n",
+        "book_info = book_info.drop_duplicates(['User-ID', 'Book-Title'])\n",
+        "\n",
+        "# 4. Filter data (Opsional tapi disarankan)\n",
+        "# Alasan: Mengurangi noise dengan hanya mengambil buku yang memiliki cukup banyak rating\n",
+        "top_books = book_info.groupby('Book-Title')['Book-Rating'].count().reset_index()\n",
+        "top_books = top_books[top_books['Book-Rating'] >= 50] # Contoh: minimal 50 rating"
+      ],
+      "metadata": {
+        "id": "Ww6KOIDGWEQN"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##Modeling (Content-Based Filtering)"
+      ],
+      "metadata": {
+        "id": "e0DzdDxfWUFR"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.metrics.pairwise import cosine_similarity\n",
+        "\n",
+        "# Mengambil sampel data agar tidak terlalu berat (opsional jika RAM terbatas)\n",
+        "# Kita ambil unik berdasarkan judul buku\n",
+        "data_content = book_info.drop_duplicates('Book-Title').head(10000)\n",
+        "\n",
+        "# Inisialisasi TF-IDF\n",
+        "tf = TfidfVectorizer()\n",
+        "tfidf_matrix = tf.fit_transform(data_content['Book-Author'].astype(str))\n",
+        "\n",
+        "# Menghitung Cosine Similarity\n",
+        "cosine_sim = cosine_similarity(tfidf_matrix)"
+      ],
+      "metadata": {
+        "id": "UEPIxdNrZLLl"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##Result & Evaluation"
+      ],
+      "metadata": {
+        "id": "RYZLmW-sZS6p"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "GSYgzYZmWRJ-"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def get_recommendations(title, cosine_sim=cosine_sim):\n",
+        "    idx = data_content[data_content['Book-Title'] == title].index[0]\n",
+        "    sim_scores = list(enumerate(cosine_sim[idx]))\n",
+        "    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)\n",
+        "\n",
+        "    # Ambil 5 rekomendasi teratas (Top-5)\n",
+        "    book_indices = [i[0] for i in sim_scores[1:6]]\n",
+        "    return data_content['Book-Title'].iloc[book_indices]\n",
+        "\n",
+        "# Test model\n",
+        "print(get_recommendations('Classical Mythology'))"
+      ],
+      "metadata": {
+        "id": "vMqZyrROZUAM",
+        "outputId": "5db9c8ab-b4a2-41b2-eaea-45bd260997c3",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "9405    Over Sea, Under Stone\n",
+            "9498       The Dark Is Rising\n",
+            "9499               Greenwitch\n",
+            "9501       Silver on the Tree\n",
+            "3170       The Sleep of Stone\n",
+            "Name: Book-Title, dtype: object\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "x5LK2qEAylDe"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
